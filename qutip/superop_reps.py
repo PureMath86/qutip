@@ -337,4 +337,28 @@ def to_kraus(q_oper):
             "and superrep = {0.superrep} to Kraus decomposition not "
             "supported.".format(q_oper)
         )
+
+def to_superrep(superrep, q_oper):
+    """
+    Converts a Qobj representing a quantum map to the representation named by
+    the superrep argument.
     
+    Parameters
+    ----------
+    
+    superrep : str
+        Name of the superoperator representation to convert the input map to.
+        One of "super", "choi", "chi" or "kraus".
+    q_oper : Qobj
+        Quantum object to be converted.
+    """
+    if superrep == "super":
+        return to_super(q_oper)
+    elif superrep == "choi":
+        return to_choi(q_oper)
+    elif superrep == "chi":
+        return to_chi(q_oper)
+    elif superrep == "kraus":
+        return to_kraus(q_oper)
+    else:
+        raise ValueError("No such superrep {}.".format(superrep))

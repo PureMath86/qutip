@@ -42,6 +42,7 @@ import numpy as np
 from qutip.sparse import sp_eigs
 from qutip.states import ket2dm
 from qutip.superop_reps import to_kraus
+from qutip.superrep_dispatch import dispatch_on_superrep
 
 
 def fidelity(A, B):
@@ -78,8 +79,9 @@ def fidelity(A, B):
     else:
         A = A.sqrtm()
         return float(np.real((A * (B * A)).sqrtm().tr()))
-        
-def average_gate_fidelity(oper):
+       
+@dispatch_on_superrep('kraus', default=True)
+def average_gate_fidelity(kraus_form):
     """
     Given a Qobj representing the supermatrix form of a map, returns the
     average gate fidelity (pseudo-metric) of that map.
@@ -94,7 +96,8 @@ def average_gate_fidelity(oper):
     fid : float
         Fidelity pseudo-metric between A and the identity superoperator.
     """
-    kraus_form = to_kraus(oper)
+    # We can assume that the input is *always* in Kraus form, as we have used
+    # dispatch_on_superrep to ensure that this is the case.
     d = kraus_form[0].shape[0]
     
     if kraus_form[0].shape[1] != d:
@@ -107,6 +110,10 @@ def average_gate_fidelity(oper):
             for A_k in kraus_form
         ])
     ) / (d**2 + d)
+    
+@dispatch_on_superrep('chi')
+def average_gate_fidelity(oper):
+    return np.real(oper.data[0, 0] / np.prod(oper.dims[0]))
 
 
 def tracedist(A, B, sparse=False, tol=0):
