@@ -46,6 +46,8 @@ from qutip.superoperator import operator_to_vector
 import qutip.settings
 import qutip.superop_reps  # Avoid circular dependency here.
 
+from qutip.numba_proxy import maybejit
+
 
 def tensor(*args):
     """Calculates the tensor product of input operators.
@@ -349,7 +351,7 @@ def unflatten(l, idxs):
             acc.append(l[idx])
     return acc
 
-
+@maybejit
 def _tensor_contract_single(arr, i, j):
     """
     Contracts a dense tensor along a single index pair.
@@ -357,10 +359,24 @@ def _tensor_contract_single(arr, i, j):
     if arr.shape[i] != arr.shape[j]:
         raise ValueError("Cannot contract over indices of different length.")
     idxs = np.arange(arr.shape[i])
-    sl = tuple(slice(None, None, None)
-               if idx not in (i, j) else idxs for idx in range(arr.ndim))
-    return np.sum(arr[sl], axis=0)
 
+    # Assume i is smaller.
+    if j < i:
+        i, j = j, i
+
+    # Permute arr to put i and j at the left.
+    transpose_list = list(range(arr.ndim))
+    transpose_list = [i, j] + transpose_list[:i] + transpose_list[i+1:j] + transpose_list[j+1:]
+    arr = arr.transpose(transpose_list)
+
+    # Compute the new shape and make a new array of that size.
+    contracted_shape = arr.shape[2:]
+    contracted_arr = np.zeros(contracted_shape, dtype=arr.dtype)
+
+    for idx in range(arr.shape[i]):
+        contracted_arr += arr[idx, idx]
+
+    return contracted_arr
 
 def _tensor_contract_dense(arr, *pairs):
     """
