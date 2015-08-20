@@ -56,7 +56,7 @@ from numpy import sqrt, dot
 from scipy.linalg import eig, svd
 
 # Other QuTiP functions and classes
-from qutip.superoperator import vec2mat, spre, spost, operator_to_vector
+from qutip.superoperator import vec2mat, spre, spost, sprepost, operator_to_vector
 from qutip.operators import identity, sigmax, sigmay, sigmaz
 from qutip.tensor import tensor, flatten
 from qutip.qobj import Qobj
@@ -480,7 +480,8 @@ def to_super(q_oper):
             raise ValueError(
                 "Unrecognized superrep '{}'.".format(q_oper.superrep))
     elif q_oper.type == 'oper':  # Assume unitary
-        return spre(q_oper) * spost(q_oper.dag())
+        # return spre(q_oper) * spost(q_oper.dag())
+        return sprepost(q_oper, q_oper.dag())
     else:
         raise TypeError(
             "Conversion of Qobj with type = {0.type} "

@@ -47,7 +47,7 @@ from qutip.qobj import Qobj
 from qutip.states import basis
 from qutip.operators import identity, sigmax, qeye
 from qutip.qip.gates import swap
-from qutip.random_objects import rand_super, rand_super_bcsz, rand_dm_ginibre
+from qutip.random_objects import rand_super, rand_super_bcsz, rand_dm_ginibre, rand_unitary_haar
 from qutip.tensor import super_tensor
 from qutip.superop_reps import (kraus_to_choi, to_super, to_choi, to_kraus,
                                 to_chi, to_stinespring)
@@ -125,6 +125,19 @@ class TestSuperopReps(object):
         superop = rand_super()
         choi = to_choi(superop)
         assert_(choi is to_choi(choi))
+
+    def test_random_unitary_propagate(self, d=59):
+        """
+        Superoperator: tests that evolution under to_super(U) and U agree.
+        """
+        U = rand_unitary_haar(d)
+        S = to_super(U)
+        rho = rand_dm_ginibre(d)
+
+        assert_((
+            operator_to_vector(U * rho * U.dag()) - S * operator_to_vector(rho)
+        ).norm() < tol)
+
 
     def test_random_iscptp(self):
         """

@@ -323,8 +323,8 @@ def sprepost(A, B):
     super : Qobj
         Superoperator formed from input quantum objects.
     """
-
-    dims = [[_drop_projected_dims(A.dims[0]), _drop_projected_dims(B.dims[1])],
-            [_drop_projected_dims(A.dims[1]), _drop_projected_dims(B.dims[0])]]
-    data = sp.kron(B.data.T, A.data, format='csr')
-    return Qobj(data, dims=dims, superrep='super')
+    S = Qobj(isherm=None, superrep='super')
+    S.dims = [[_drop_projected_dims(A.dims[0]), _drop_projected_dims(B.dims[1])],
+              [_drop_projected_dims(A.dims[1]), _drop_projected_dims(B.dims[0])]]
+    S.data = sp.kron(B.data.T, A.data, format='csr')
+    return S
